@@ -1,6 +1,8 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ModbusMaster.h>
+#include <BluetoothSerial.h>
+#include <esp_bt_device.h>
 
 #define MAX485_DE         15
 #define MAX485_RE_NEG     15
@@ -16,6 +18,7 @@ ModbusMaster ultraSonic;
 WiFiClient espClient;
 PubSubClient client(espClient);
 HardwareSerial SerialOne(1);
+BluetoothSerial bt;
 
 long lastMsg = 0;
 char msg[50];
@@ -94,10 +97,20 @@ void reconnect() {
   }
 }
 
+void getDeviceAddress(char* deviceAddr){
+  const uint8_t* point = esp_bt_dev_get_address();
+  snprintf(deviceAddr, 100 ,"%02X:%02X:%02X:%02X:%02X:%02X", point[0],point[1],point[2],point[3],point[4],point[5]);
+}
+
 void setup() {
   
   setup_RS485();    
   setup_wifi();
+
+  bt.begin("ESP32");
+  getDeviceAddress(deviceAddr);
+  Serial.print("BD = ");
+  Serial.println(deviceAddr);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 }
